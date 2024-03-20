@@ -4,17 +4,19 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import axios from 'axios';
 import Loading from '../components/Loading';
 
 import TopBar from '../components/TopBar';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAddTodoMutation } from '../api/apiSlice';
 
 function AddTask() {
     
     const navigate = useNavigate();
     const [inputErrorList, setInputErrorList] = useState('');
     const [loading, setLoading ] = useState(false); 
+
+    const [addTodo] = useAddTodoMutation();
 
     const [ todo, setTodo] = useState({
         title: '',
@@ -27,35 +29,22 @@ function AddTask() {
         setTodo({...todo, [e.target.name]: e.target.value })
     }
 
-    const saveTodo = (e) => {
+    const saveTodo = (e) => {        
         e.preventDefault();
         setLoading(true);
-
-        const data = {
-            title: todo.title,
-            description: todo.description,
-            completed: false
-        }
-
-        axios.post(`http://localhost:8000/api/todos/`, data)
-        .then( res => {
-            alert(res.data.message);
+        
+        if (todo.title!=="") {
+            addTodo(todo)
+            alert("Task created sucessfully!")
+            setLoading(false);            
             navigate("/");
+        } else {
+            setInputErrorList("Task title  can not be empty. ")
             setLoading(false);
-        })
-        .catch(function (error) {
-            if (error.response) {
-                if (error.response.status === 422) {
-                    setInputErrorList(error.response.data.errors);
-                    setLoading(false);          
-                }
-                if (error.response.status === 500) {
-                    alert(error.response.data.errors);
-                    setLoading(false);  
-                }
-            }
-        });
+        }
+        
     }
+
     if (loading) {
         return <Loading />;
     }
@@ -72,20 +61,21 @@ function AddTask() {
                     alignItems: 'center',
                 }}
                 noValidate
-                autoComplete="off"
             >        
                 <TextField 
-                    fullWidth id="outlined-basic" 
+                    fullWidth 
+                    id="filled-basic" 
                     label="Task title" 
-                    variant="outlined" 
+                    variant="filled" 
                     name="title"
                     onChange={handleInput}
-                    value={todo.title}       
+                    value={todo.title} 
                 />
-                <p>{inputErrorList.title}</p>
+                <label>{inputErrorList}</label>
                 <TextField
                     fullWidth
                     id="outlined-multiline-static"
+                    variant="filled" 
                     label="Task description"
                     multiline
                     rows={4}
@@ -93,7 +83,6 @@ function AddTask() {
                     onChange={handleInput}
                     value={todo.description}
                 />
-                <span className='text-danger'>{inputErrorList.description}</span>
                 <Stack spacing={2} direction="row">
                     <Button variant="contained" onClick={saveTodo} >Save</Button>
                     <Link to="/"><Button variant="outlined">Cancel</Button></Link>

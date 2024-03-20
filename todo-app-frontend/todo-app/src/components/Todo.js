@@ -13,6 +13,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import Checkbox from '@mui/material/Checkbox';
 import { Link } from 'react-router-dom';
 
+import { useDeleteTodoMutation, useUpdateTodoMutation } from '../api/apiSlice';
+
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
     ...theme.typography.body2,
@@ -21,10 +23,23 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 function Todo(props) {
-  
+
+    const [ deleteTodo ] = useDeleteTodoMutation();
+    const [ updateTodo ] = useUpdateTodoMutation();
+
+    const { todo } = props;
+
+    const handleDelete = () => {
+        deleteTodo( {id: todo.id});
+        alert("Task successfully deleted!")
+    } 
+
+    const handleCheckboxChange = () => {
+        updateTodo({ ...todo, completed: !props.completed });
+    };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={3} justifyContent={'center'}>
@@ -33,22 +48,22 @@ function Todo(props) {
                     <List>
                         <ListItem secondaryAction={
                             <>
-                                <Link to={`/${props.todo.id}/edit`}>
+                                <Link to={`/${todo.id}/edit`} data={todo}>
                                     <IconButton sx={{ marginRight: 1 }} edge="end" aria-label="edit">
                                         <EditOutlinedIcon />
                                     </IconButton>
                                 </Link>
-                                <IconButton onClick={props.onDelete} edge="end" aria-label="delete">
+                                <IconButton onClick={handleDelete} edge="end" aria-label="delete">
                                     <DeleteIcon />
                                 </IconButton>
                             </>
                         }>
                             <ListItemAvatar>
-                                <Checkbox {...label} />
+                                <Checkbox onChange={handleCheckboxChange} />
                             </ListItemAvatar>
                             <ListItemText
-                                primary={props.todo.title}
-                                secondary={props.todo.description}
+                                primary={todo.title}
+                                secondary={todo.description}
                             />
                         </ListItem>
                     </List>
@@ -57,6 +72,6 @@ function Todo(props) {
         </Grid>
     </Box>
 );
-}
+}             
 
 export default Todo;
