@@ -23,7 +23,6 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-
 function Todo(props) {
 
     const [ deleteTodo ] = useDeleteTodoMutation();
@@ -37,7 +36,8 @@ function Todo(props) {
     } 
 
     const handleCheckboxChange = () => {
-        updateTodo({ ...todo, completed: !props.completed });
+        console.log(todo.completed)
+        updateTodo({ ...todo, completed: !todo.completed });
     };
 
   return (
@@ -48,7 +48,7 @@ function Todo(props) {
                     <List>
                         <ListItem secondaryAction={
                             <>
-                                <Link to={`/${todo.id}/edit`} data={todo}>
+                                <Link to={`/${todo.id}/edit`}>
                                     <IconButton sx={{ marginRight: 1 }} edge="end" aria-label="edit">
                                         <EditOutlinedIcon />
                                     </IconButton>
@@ -59,7 +59,7 @@ function Todo(props) {
                             </>
                         }>
                             <ListItemAvatar>
-                                <Checkbox onChange={handleCheckboxChange} />
+                                <Checkbox checked={todo.completed} onChange={handleCheckboxChange}  />                                            
                             </ListItemAvatar>
                             <ListItemText
                                 primary={todo.title}
