@@ -1,40 +1,70 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Loading from '../components/Loading';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useGetTodoByIdQuery, useUpdateTodoMutation} from '../api/apiSlice'
 
 import TopBar from '../components/TopBar';
 
-function EditTask(props) {
+function EditTask() {
     
-    //let { id } = useParams();
+    let { id } = useParams();
+    const navigate = useNavigate();
 
-    const [loading, setLoading ] = useState(false); 
+    const [inputErrorList, setInputErrorList] = useState('');
 
+    const { data: todoData, isLoading, isError, error } = useGetTodoByIdQuery(id);
+    const [ updateTodo ] = useUpdateTodoMutation();
+    
     const [ todo, setTodo] = useState({
-        title: props.title,
-        description: props.description,
+        title: '',
+        description: '',
         completed: false
     })
+    
+    useEffect(() => {
+        if(todoData){
+            setTodo(todoData.message);
+        }
+    }, [todoData]);
+
+    if (isLoading) {
+        return <Loading/>;
+      }
+    
+    if (isError) {
+        return <p>Error: {error.message}</p>;
+      }
 
     const handleInput = (e) => {
         e.persist();
         setTodo({...todo, [e.target.name]: e.target.value })
     }
 
-    const saveTodo = (e) => {
+    const saveTodo = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        if (todo.title !== "") {
+            try {
+                await updateTodo({
+                    id,
+                    title: todo.title,
+                    description: todo.description,
+                    completed: todo.completed
+                });
+                alert("Task updated successfully!");
+                navigate("/");
+            } catch (error) {
+                console.error("Error updating todo:", error);
+            }
+        } else {
+            setInputErrorList("Task title can not be empty.");
+        }
     }
-
-    if (loading) {
-        return <Loading />;
-    }
-
+    
     return(
         <div>
             <TopBar title="Edit Task"/>
@@ -51,13 +81,13 @@ function EditTask(props) {
             >        
                 <TextField 
                     fullWidth id="outlined-basic" 
-                    label="Task title" 
+                    label="title"
                     variant="outlined" 
                     name="title"
                     onChange={handleInput}
-                    value=" "              
+                    value={todo.title}              
                 />
-                <p>test: {todo.title}</p>
+                <p>{inputErrorList}</p>
                 <TextField
                     fullWidth
                     id="outlined-multiline-static"
@@ -66,7 +96,7 @@ function EditTask(props) {
                     rows={4}
                     name="description"
                     onChange={handleInput}
-                    value=" "
+                    value={todo.description}
                 />
                 <Stack spacing={2} direction="row">
                     <Button variant="contained" onClick={saveTodo} >Save</Button>
